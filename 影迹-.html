@@ -3,17 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>影迹-余宣灵</title>
+    <title>影迹-余宣灵 | Visionary V8.9 Final Fixed</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
     <style>
         :root {
-            --primary: #8E2DE2; 
-            --tmdb-color: #01b4e4; --douban-color: #2e963d;
+            --primary: #8E2DE2; --primary-rgb: 142, 45, 226;
+            --tmdb-color: #01b4e4; --douban-color: #2e963d; --github-color: #24292e;
             --bg: #F2F2F7; --sidebar-bg: rgba(255, 255, 255, 0.75); --card-bg: rgba(255, 255, 255, 0.8);
             --text-main: #1D1D1F; --text-sec: #86868B; --border: rgba(0, 0, 0, 0.05);
-            --sidebar-w: 260px; --radius-lg: 20px; --glass-blur: blur(30px);
+            --sidebar-w: 260px; --radius-lg: 24px; --glass-blur: blur(30px);
             --shadow-md: 0 8px 30px rgba(0,0,0,0.06);
+            --ease: cubic-bezier(0.23, 1, 0.32, 1);
         }
 
         [data-theme="dark"] {
@@ -21,182 +22,208 @@
             --text-main: #FFF; --text-sec: #A1A1A6; --border: rgba(255, 255, 255, 0.1);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "PingFang SC", sans-serif; transition: background 0.4s var(--ease), color 0.4s var(--ease), transform 0.4s var(--ease), box-shadow 0.4s var(--ease); }
         body { background: var(--bg); color: var(--text-main); display: flex; min-height: 100vh; overflow-x: hidden; }
-        
-        /* 侧边栏整体 */
-        .sidebar { width: var(--sidebar-w); background: var(--sidebar-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); height: 100vh; position: fixed; border-right: 1px solid var(--border); padding: 40px 20px; display: flex; flex-direction: column; z-index: 1000; }
-        .logo-box h1 { font-size: 26px; font-weight: 600; color: var(--primary); letter-spacing: -1.2px; line-height: 1.1; }
-        .logo-box p { font-size: 10px; opacity: 0.4; font-weight: 600; margin-top: 6px; margin-bottom: 35px; letter-spacing: 0.5px; }
 
-        .menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-radius: 14px; margin-bottom: 8px; cursor: pointer; color: var(--text-sec); font-weight: 500; font-size: 14px; }
-        .menu-item:hover { background: rgba(0,0,0,0.03); color: var(--primary); }
-        .menu-item.active { color: #fff; background: var(--primary); box-shadow: 0 4px 15px rgba(0,0,0,0.1); font-weight: 600; }
-        .menu-item.active[data-src="tmdb"] { background: var(--tmdb-color); }
-        .menu-item.active[data-src="douban"] { background: var(--douban-color); }
-
-        .history-section { margin-top: 20px; border-top: 1px solid var(--border); padding-top: 20px; flex-grow: 1; overflow-y: auto; }
-        .history-header { font-size: 11px; opacity: 0.5; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; }
-        .history-item { padding: 8px 12px; border-radius: 10px; cursor: pointer; font-size: 13px; color: var(--text-sec); display: flex; align-items: center; gap: 10px; }
-        .history-item:hover { background: rgba(0,0,0,0.05); color: var(--primary); }
-
-        /* 重构底部工具栏：横向亚克力砖 */
-        .sidebar-footer { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border); }
-        .dock-tools { display: flex; background: rgba(0,0,0,0.03); border-radius: 15px; padding: 5px; gap: 5px; margin-bottom: 15px; }
-        [data-theme="dark"] .dock-tools { background: rgba(255,255,255,0.05); }
-        
-        .dock-item { 
-            flex: 1; height: 40px; border-radius: 10px; display: flex; align-items: center; 
-            justify-content: center; color: var(--text-sec); font-size: 16px; cursor: pointer;
-            text-decoration: none;
+        /* 动态背景 */
+        body::before {
+            content: ""; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(var(--primary-rgb), 0.07) 0%, transparent 60%);
+            z-index: -1; animation: rotateBg 25s linear infinite; pointer-events: none;
         }
-        .dock-item:hover { background: var(--card-bg); color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        @keyframes rotateBg { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* 调色盘面板 */
-        #pickerPanel {
-            position: absolute; bottom: 85px; left: 10px; right: 10px; background: var(--card-bg); 
-            backdrop-filter: blur(40px); border: 1px solid var(--border); padding: 20px;
-            border-radius: 20px; box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
-            display: none; z-index: 2000;
+        /* 搜索聚焦效果 */
+        body.searching .results-grid, body.searching .toolbar-wrap { filter: blur(15px); transform: scale(0.98); opacity: 0.4; pointer-events: none; }
+
+        /* 侧边栏布局 - 已移除右边框 */
+        .sidebar { 
+            width: var(--sidebar-w); background: var(--sidebar-bg); backdrop-filter: var(--glass-blur); 
+            height: 100vh; position: fixed; border-right: none; padding: 30px 20px; 
+            display: flex; flex-direction: column; z-index: 5000; left: 0; top: 0; 
         }
 
-        /* 主容器 */
-        .main-container { margin-left: var(--sidebar-w); flex: 1; padding: 40px; width: 100%; display: flex; flex-direction: column; align-items: center; }
-        .search-area { width: 100%; max-width: 800px; margin-bottom: 35px; display: flex; flex-direction: column; gap: 20px; }
-        .search-row { display: flex; gap: 12px; width: 100%; }
-        .search-box { flex: 1; background: var(--card-bg); backdrop-filter: var(--glass-blur); border-radius: 18px; padding: 0 20px; display: flex; align-items: center; border: 1px solid var(--border); box-shadow: var(--shadow-md); }
-        .search-box input { border: none; outline: none; width: 100%; height: 54px; font-size: 16px; background: transparent; color: var(--text-main); }
-        .btn-search { background: var(--primary); color: #fff; border: none; padding: 0 32px; border-radius: 18px; font-weight: 600; cursor: pointer; }
+        .logo-box h1 { font-size: 28px; font-weight: 700; color: var(--primary); letter-spacing: -1.5px; }
+        .logo-box p { font-size: 10px; opacity: 0.4; font-weight: 600; letter-spacing: 1px; }
 
-        .filter-row { display: flex; justify-content: center; align-items: center; gap: 25px; width: 100%; }
-        .filter-group { display: flex; gap: 8px; background: rgba(0,0,0,0.04); padding: 6px; border-radius: 16px; }
-        [data-theme="dark"] .filter-group { background: rgba(255,255,255,0.08); }
-        .filter-btn { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; background: transparent; color: var(--text-sec); font-size: 16px; }
-        .filter-btn.active { background: var(--primary); color: #fff; box-shadow: 0 6px 15px rgba(0,0,0,0.12); }
+        .menu-item { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 16px; margin-bottom: 8px; cursor: pointer; color: var(--text-sec); font-weight: 500; text-decoration: none; }
+        .menu-item:hover { background: rgba(var(--primary-rgb), 0.05); color: var(--primary); transform: translateX(8px); }
+        .menu-item.active { color: #fff; background: var(--primary); box-shadow: 0 8px 20px rgba(var(--primary-rgb), 0.3); }
 
-        .layout-switcher { display: flex; background: rgba(0,0,0,0.04); padding: 6px; border-radius: 16px; gap: 8px; }
-        .layout-btn { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; background: transparent; color: var(--text-sec); font-size: 16px; }
-        .layout-btn.active { background: #fff; color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        [data-theme="dark"] .layout-btn.active { background: var(--card-bg); color: var(--primary); }
+        /* 主体内容 */
+        .main-container { margin-left: var(--sidebar-w); flex: 1; padding: 60px 40px; width: calc(100vw - var(--sidebar-w)); display: flex; flex-direction: column; align-items: center; }
+        .search-area { width: 100%; max-width: 850px; margin-bottom: 40px; z-index: 100; position: relative; }
+        
+        .search-group { display: flex; gap: 12px; width: 100%; margin-bottom: 25px; }
+        .search-box { flex: 1; background: var(--card-bg); backdrop-filter: var(--glass-blur); border-radius: 22px; padding: 0 25px; display: flex; align-items: center; border: 1px solid var(--border); box-shadow: var(--shadow-md); }
+        .search-box input { border: none; outline: none; width: 100%; height: 60px; font-size: 18px; background: transparent; color: var(--text-main); }
+        .btn-search { background: var(--primary); color: #fff; border: none; padding: 0 35px; border-radius: 22px; font-weight: 600; cursor: pointer; box-shadow: 0 8px 15px rgba(var(--primary-rgb), 0.2); }
 
-        .results-grid { display: grid; gap: 25px; width: 100%; max-width: 1200px; }
-        .results-grid.style-portrait { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
-        .results-grid.style-landscape { grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); }
+        .toolbar-wrap { 
+            display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 20px; 
+            background: rgba(var(--primary-rgb), 0.03); padding: 8px 25px; border-radius: 20px; 
+            width: fit-content !important; margin: 0 auto !important; border: 1px solid var(--border);
+            white-space: nowrap;
+        }
+        .toolbar-section { display: flex; flex-direction: row; align-items: center; gap: 8px; }
+        .toolbar-divider { width: 1px; height: 24px; background: var(--border); margin: 0 5px; }
 
-        .card { background: var(--card-bg); border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border); cursor: pointer; position: relative; }
-        .card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.12); border-color: var(--primary); }
-        .card-img-wrapper { background: #e0e0e0; position: relative; overflow: hidden; width: 100%; aspect-ratio: 2/3; }
+        .filter-btn, .layout-btn { width: 44px; height: 44px; border-radius: 12px; border: none; background: transparent; color: var(--text-sec); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .filter-btn.active, .layout-btn.active { background: var(--primary); color: #fff; box-shadow: 0 5px 15px rgba(var(--primary-rgb), 0.3); }
+
+        /* 历史记录区域 - 已移除顶部分割线 */
+        .history-section { margin-top: 20px; border-top: none; padding-top: 20px; flex-grow: 1; overflow-y: auto; }
+
+        /* 侧边栏底部 - 已移除顶部分割线 */
+        .sidebar-footer { margin-top: auto; padding-top: 20px; border-top: none; }
+        
+        .footer-controls { display: flex; background: rgba(0,0,0,0.03); border-radius: 15px; padding: 6px; gap: 15px; align-items: center; justify-content: flex-start; margin-bottom: 15px; width: fit-content; }
+        .theme-switch { position: relative; width: 54px; height: 28px; background: rgba(0,0,0,0.1); border-radius: 20px; cursor: pointer; }
+        [data-theme="dark"] .theme-switch { background: var(--primary); }
+        .theme-switch-dot { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #86868B; transition: 0.4s var(--ease); }
+        [data-theme="dark"] .theme-switch-dot { left: 29px; transform: rotate(360deg); }
+
+        .results-grid { display: grid; gap: 28px; width: 100%; max-width: 1300px; margin-top: 20px; }
+        .results-grid.style-portrait { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+        .results-grid.style-landscape { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); }
+        .card { background: var(--card-bg); border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border); cursor: pointer; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.03); animation: slideUpFade 0.6s var(--ease) backwards; }
+        .card:hover { transform: translateY(-12px) scale(1.02); border-color: var(--primary); }
+        .card-img-wrapper { background: #e0e0e0; position: relative; overflow: hidden; aspect-ratio: 2/3; }
         .style-landscape .card-img-wrapper { aspect-ratio: 16/9; }
-        .card-img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: 0.6s; }
+        .card-img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: 0.8s; }
         .card-img.loaded { opacity: 1; }
-        .card-badge { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.6); color: #fff; padding: 4px 10px; border-radius: 8px; font-size: 10px; z-index: 5; font-weight: 600; }
 
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(15px); display: none; justify-content: center; align-items: flex-end; z-index: 3000; }
-        .modal-content { background: var(--card-bg); padding: 40px; border-radius: 25px 25px 0 0; width: 100%; max-width: 650px; max-height: 85vh; overflow-y: auto; }
+        @keyframes slideUpFade { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        .season-tag { padding: 8px 16px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; }
+        .season-tag:hover { transform: scale(1.05); border-color: var(--primary); color: var(--primary); }
+        .status-badge { padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; margin-right: 8px; display: inline-flex; align-items: center; gap: 5px; }
+        .status-ended { background: #2ecc71; color: #fff; }
+        .status-ongoing { background: #f1c40f; color: #000; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(20px); display: none; justify-content: center; align-items: center; z-index: 6000; }
+        .modal-content { background: var(--card-bg); padding: 40px; border-radius: 32px; width: 95%; max-width: 700px; max-height: 90vh; overflow-y: auto; position: relative; animation: modalIn 0.4s var(--ease); }
+        @keyframes modalIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
         @media (max-width: 1024px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.active { transform: translateX(0); }
-            .main-container { margin-left: 0; padding: 80px 15px 30px; }
-            .mobile-nav { display: flex !important; }
+            .sidebar { transform: translateX(-100%); transition: transform 0.5s var(--ease); }
+            .sidebar.active { transform: translateX(0); box-shadow: 20px 0 50px rgba(0,0,0,0.2); }
+            .main-container { margin-left: 0; width: 100%; padding: 90px 20px 30px; }
+            .mobile-nav { display: flex !important; position: fixed; top: 0; width: 100%; height: 60px; background: var(--sidebar-bg); backdrop-filter: blur(20px); z-index: 4000; align-items: center; padding: 0 20px; justify-content: space-between; border-bottom: 1px solid var(--border); }
+            .toolbar-wrap { gap: 10px; padding: 6px 15px; }
+            .filter-btn, .layout-btn { width: 38px; height: 38px; font-size: 16px; }
         }
-        .mobile-nav { display: none; position: fixed; top: 0; width: 100%; height: 60px; background: var(--sidebar-bg); backdrop-filter: var(--glass-blur); z-index: 1100; align-items: center; padding: 0 20px; justify-content: space-between; border-bottom: 1px solid var(--border); }
-        .btn-official { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; margin-top: 15px; color: #fff; font-size: 15px; background: var(--primary); display: flex; align-items: center; justify-content: center; gap: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="mobile-nav">
+    <div id="sidebar-overlay" onclick="toggleSidebar()" style="position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:4999; display:none;"></div>
+
+    <div class="mobile-nav" style="display:none;">
         <div onclick="toggleSidebar()"><i class="fas fa-bars-staggered"></i></div>
-        <div style="font-weight: 600; color: var(--primary);">影迹</div>
+        <div style="font-weight: 700; color: var(--primary);">影迹</div>
         <div onclick="quickThemeToggle()"><i class="fas fa-adjust"></i></div>
     </div>
 
     <aside class="sidebar" id="sidebar">
-        <div class="logo-box"><h1>影迹</h1><p>VISIONARY TRACKS V7.4</p></div>
-        <nav>
+        <div class="logo-box" style="margin-bottom: 30px;"><h1>影迹</h1><p>VISIONARY TRACKS V8.9</p></div>
+        <nav class="menu-nav">
             <div class="menu-item active" data-src="tmdb" onclick="switchSource('tmdb', this)"><i class="fas fa-globe-asia"></i> 全球库 (TMDB)</div>
             <div class="menu-item" data-src="douban" onclick="switchSource('douban', this)"><i class="fas fa-leaf"></i> 豆瓣搜索</div>
+            <a href="https://github.com/guguli685-boop?tab=repositories" target="_blank" class="menu-item"><i class="fab fa-github"></i> 我的仓库 (GitHub)</a>
         </nav>
+        
         <div class="history-section">
-            <div class="history-header"><span>最近搜索</span><i class="fas fa-trash-alt" onclick="clearHistory()" style="cursor:pointer"></i></div>
+            <div style="font-size: 11px; opacity: 0.5; font-weight: 700; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                <span>最近搜索</span><i class="fas fa-trash-alt" onclick="clearHistory()" style="cursor:pointer"></i>
+            </div>
             <div id="historyList"></div>
         </div>
 
         <div class="sidebar-footer">
-            <div id="pickerPanel" onclick="event.stopPropagation()">
-                <div style="font-size: 12px; font-weight: 600; margin-bottom: 15px; text-align: center; opacity: 0.6;">主题调色盘</div>
+            <div id="pickerPanel" style="position: absolute; bottom: 90px; left: 20px; background: var(--card-bg); padding: 20px; border-radius: 20px; border: 1px solid var(--border); box-shadow: var(--shadow-md); display: none; z-index: 5100;">
                 <div id="iroWheel"></div>
             </div>
-            
-            <div class="dock-tools">
-                <a href="https://github.com/Moriafly" target="_blank" class="dock-item" title="GitHub"><i class="fab fa-github"></i></a>
-                <div class="dock-item" onclick="togglePicker(event)" title="个性化颜色"><i class="fas fa-palette"></i></div>
-                <div class="dock-item" onclick="quickThemeToggle()" title="切换模式"><i class="fas fa-adjust"></i></div>
+            <div class="footer-controls">
+                <div onclick="togglePicker(event)" style="width:38px; height:38px; display:flex; align-items:center; justify-content:center; color:var(--text-sec); cursor:pointer;"><i class="fas fa-palette"></i></div>
+                <div class="theme-switch" onclick="quickThemeToggle()">
+                    <div class="theme-switch-dot"><i class="fas id-icon fa-sun"></i></div>
+                </div>
             </div>
-            <p style="font-size: 10px; opacity: 0.3; text-align: center;">© 2025 余宣灵./p>
+            <p style="font-size: 10px; opacity: 0.3; text-align: left; padding-left: 5px;">© 2025 余宣灵. Crafted with Love.</p>
         </div>
     </aside>
 
     <main class="main-container">
         <div class="search-area">
-            <div class="search-row"><div class="search-box"><i class="fas fa-search" style="opacity: 0.3; margin-right: 12px;"></i><input type="text" id="searchInput" placeholder="搜索影视、动漫、年份..."></div><button class="btn-search" onclick="handleSearch()">探索</button></div>
-            <div class="filter-row">
-                <div class="filter-group" id="mediaFilter">
+            <div class="search-group">
+                <div class="search-box">
+                    <i class="fas fa-search" style="opacity:0.3; margin-right:12px;"></i>
+                    <input type="text" id="searchInput" placeholder="探索电影、剧集、动漫..." 
+                           onfocus="document.body.classList.add('searching')" 
+                           onblur="setTimeout(() => document.body.classList.remove('searching'), 200)">
+                </div>
+                <button class="btn-search" onclick="handleSearch()">探索</button>
+            </div>
+            
+            <div class="toolbar-wrap">
+                <div class="toolbar-section" id="mediaFilter">
                     <button class="filter-btn active" onclick="setFilter('all', this)"><i class="fas fa-layer-group"></i></button>
                     <button class="filter-btn" onclick="setFilter('movie', this)"><i class="fas fa-film"></i></button>
                     <button class="filter-btn" onclick="setFilter('tv', this)"><i class="fas fa-tv"></i></button>
-                    <button class="filter-btn btn-rating" onclick="setSort('rating', this)"><i class="fas fa-star"></i></button>
+                    <button class="filter-btn" onclick="setSort('rating', this)"><i class="fas fa-star"></i></button>
                 </div>
-                <div class="layout-switcher">
-                    <button class="layout-btn active" id="btnPortrait" onclick="switchLayoutStyle('portrait')"><i class="fas fa-grip-vertical"></i></button>
+                <div class="toolbar-divider"></div>
+                <div class="toolbar-section">
+                    <button class="layout-btn" id="btnPortrait" onclick="switchLayoutStyle('portrait')"><i class="fas fa-grip-vertical"></i></button>
                     <button class="layout-btn" id="btnLandscape" onclick="switchLayoutStyle('landscape')"><i class="fas fa-grip-horizontal"></i></button>
                 </div>
             </div>
         </div>
-        <div id="resultsGrid" class="results-grid style-portrait"></div>
+        
+        <div id="resultsGrid" class="results-grid"></div>
     </main>
 
     <div class="modal-overlay" id="detailModal" onclick="closeModal()">
-        <div class="modal-content" onclick="event.stopPropagation()"><div id="modalBody"></div><div id="modalActions"></div><button onclick="closeModal()" style="width:100%; margin-top:15px; padding:12px; background:rgba(0,0,0,0.05); border:none; color:var(--text-sec); border-radius:12px; cursor:pointer; font-weight:500;">返回列表</button></div>
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div id="modalBody"></div>
+            <div id="modalActions" style="margin-top:25px;"></div>
+            <button onclick="closeModal()" style="width:100%; margin-top:15px; padding:16px; background:rgba(0,0,0,0.05); border:none; color:var(--text-sec); border-radius:16px; cursor:pointer; font-weight:700;">返回列表</button>
+        </div>
     </div>
 
 <script>
-    const CONFIG = { KEY: '42a4fd5a0816caf335c6ac5e4118a303', API: 'https://api.themoviedb.org/3', IMG_H: 'https://image.tmdb.org/t/p/w780', IMG_V: 'https://image.tmdb.org/t/p/w500' };
+    const CONFIG = { KEY: 'tmdb密钥填这里', API: 'https://api.themoviedb.org/3', IMG_H: 'https://image.tmdb.org/t/p/w780', IMG_V: 'https://image.tmdb.org/t/p/w500' };
     let state = { history: JSON.parse(localStorage.getItem('yj_his')) || [], source: 'tmdb', allResults: [], currentFilter: 'all', currentSort: 'default', layout: localStorage.getItem('yj_layout') || 'portrait' };
     let colorPicker;
 
-    window.onload = () => { renderHistory(); switchLayoutStyle(state.layout); applyStoredTheme(); initPicker(); document.addEventListener('click', () => { document.getElementById('pickerPanel').style.display = 'none'; }); };
-    
-    function initPicker() { 
-        const savedColor = localStorage.getItem('yj_primary_color') || '#8E2DE2'; 
-        document.documentElement.style.setProperty('--primary', savedColor); 
-        colorPicker = new iro.ColorPicker("#iroWheel", { width: 180, color: savedColor, layout: [{ component: iro.ui.Wheel }, { component: iro.ui.Slider, options: { sliderType: 'value' } }] }); 
-        colorPicker.on('color:change', (color) => { document.documentElement.style.setProperty('--primary', color.hexString); localStorage.setItem('yj_primary_color', color.hexString); }); 
+    window.onload = () => { applyStoredTheme(); initPicker(); renderHistory(); switchLayoutStyle(state.layout); document.addEventListener('click', () => document.getElementById('pickerPanel').style.display = 'none'); };
+
+    function initPicker() {
+        const savedColor = localStorage.getItem('yj_primary_color') || '#8E2DE2';
+        updatePrimaryColor(savedColor);
+        colorPicker = new iro.ColorPicker("#iroWheel", { width: 180, color: savedColor, layout: [{ component: iro.ui.Wheel }, { component: iro.ui.Slider }] });
+        colorPicker.on('color:change', (color) => updatePrimaryColor(color.hexString));
     }
-    
-    function togglePicker(e) { e.stopPropagation(); const panel = document.getElementById('pickerPanel'); panel.style.display = panel.style.display === 'block' ? 'none' : 'block'; }
-    function applyStoredTheme() { const isDark = localStorage.getItem('yj_dark') === 'true'; document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light'); }
-    function quickThemeToggle() { const isDark = document.documentElement.getAttribute('data-theme') === 'dark'; const next = isDark ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', next); localStorage.setItem('yj_dark', next === 'dark'); }
-    
-    function setFilter(type, el) { state.currentFilter = type; document.querySelectorAll('#mediaFilter .filter-btn:not(.btn-rating)').forEach(b => b.classList.remove('active')); el.classList.add('active'); renderGrid(); }
-    function setSort(type, el) { el.classList.toggle('active'); state.currentSort = el.classList.contains('active') ? type : 'default'; renderGrid(); }
-    function switchLayoutStyle(style) { state.layout = style; localStorage.setItem('yj_layout', style); document.getElementById('resultsGrid').className = `results-grid style-${style}`; document.getElementById('btnPortrait').classList.toggle('active', style === 'portrait'); document.getElementById('btnLandscape').classList.toggle('active', style === 'landscape'); renderGrid(); }
-    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
-    function switchSource(src, el) { state.source = src; document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active')); el.classList.add('active'); if(window.innerWidth <= 1024) toggleSidebar(); }
+
+    function updatePrimaryColor(hex) {
+        document.documentElement.style.setProperty('--primary', hex);
+        localStorage.setItem('yj_primary_color', hex);
+        const r = parseInt(hex.slice(1,3), 16), g = parseInt(hex.slice(3,5), 16), b = parseInt(hex.slice(5,7), 16);
+        document.documentElement.style.setProperty('--primary-rgb', `${r},${g},${b}`);
+    }
 
     async function handleSearch() {
         const query = document.getElementById('searchInput').value.trim();
         if (!query) return;
         if (!state.history.includes(query)) { state.history.unshift(query); state.history = state.history.slice(0, 10); localStorage.setItem('yj_his', JSON.stringify(state.history)); renderHistory(); }
         const grid = document.getElementById('resultsGrid');
-        grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 50px; opacity:0.5;"><i class="fas fa-spinner fa-spin" style="color:var(--primary)"></i> 加载中...</div>';
+        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:100px; opacity:0.5;"><i class="fas fa-spinner fa-spin" style="font-size:24px; color:var(--primary);"></i></div>`;
         try {
             const res = await fetch(`${CONFIG.API}/search/multi?api_key=${CONFIG.KEY}&query=${encodeURIComponent(query)}&language=zh-CN`);
             const data = await res.json();
             state.allResults = data.results.filter(i => i.media_type !== 'person');
             renderGrid();
-        } catch (e) { grid.innerHTML = '搜索出错'; }
+        } catch (e) { grid.innerHTML = '搜索失败'; }
     }
 
     function renderGrid() {
@@ -204,56 +231,58 @@
         let displayData = [...state.allResults];
         if (state.currentFilter !== 'all') displayData = displayData.filter(i => i.media_type === state.currentFilter);
         if (state.currentSort === 'rating') displayData.sort((a, b) => b.vote_average - a.vote_average);
-        grid.innerHTML = displayData.map(item => {
+
+        grid.innerHTML = displayData.map((item, index) => {
             const title = item.title || item.name;
-            const originalTitle = item.original_title || item.original_name;
-            const imgPath = state.layout === 'landscape' ? (item.backdrop_path || item.poster_path) : (item.poster_path || item.backdrop_path);
+            const imgPath = item.backdrop_path || item.poster_path;
             const imgUrl = imgPath ? (state.layout === 'landscape' ? CONFIG.IMG_H : CONFIG.IMG_V) + imgPath : '';
-            return `
-                <div class="card" onclick="showDetail(${item.id}, '${item.media_type}')">
-                    <div class="card-badge">${item.media_type === 'tv' ? '剧集' : '电影'}</div>
-                    <div class="card-img-wrapper">${imgUrl ? `<img src="${imgUrl}" class="card-img" onload="this.classList.add('loaded')">` : `<div style="padding:40px;text-align:center;font-size:12px;opacity:0.3;">${title}</div>`}</div>
-                    <div style="padding:15px;">
-                        <div style="font-weight:600; font-size:14px; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${title}</div>
-                        <div style="font-size:10px; color:var(--text-sec); margin-bottom:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:0.6;">${originalTitle !== title ? originalTitle : ''}</div>
-                        <div style="font-size:11px; color:var(--text-sec); display:flex; justify-content:space-between;">
-                            <span style="color:#D4A017; font-weight:600;"><i class="fas fa-star"></i> ${item.vote_average?.toFixed(1) || '0.0'}</span>
-                            <span>${(item.release_date || item.first_air_date || '').slice(0,4)}</span>
-                        </div>
-                    </div>
-                </div>`;
+            return `<div class="card" style="animation-delay: ${index * 0.05}s" onclick="showDetail(${item.id}, '${item.media_type}')">
+                        <div style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); color: #fff; padding: 3px 8px; border-radius: 6px; font-size: 10px; z-index: 5;">${item.media_type === 'tv' ? '剧集' : '电影'}</div>
+                        <div class="card-img-wrapper">${imgUrl ? `<img src="${imgUrl}" class="card-img" onload="this.classList.add('loaded')">` : `<div style="height:100%; display:flex; align-items:center; justify-content:center; opacity:0.2;">${title}</div>`}</div>
+                        <div style="padding:15px;"><div style="font-weight:700; font-size:14px; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${title}</div>
+                        <div style="font-size:11px; color:var(--text-sec); display:flex; justify-content:space-between;"><span style="color:#f1c40f; font-weight:700;"><i class="fas fa-star"></i> ${item.vote_average?.toFixed(1) || '0.0'}</span><span>${(item.release_date || item.first_air_date || '').slice(0,4)}</span></div></div></div>`;
         }).join('');
     }
 
     async function showDetail(id, type) {
-        const modal = document.getElementById('detailModal');
         const body = document.getElementById('modalBody');
-        modal.style.display = 'flex';
+        const actions = document.getElementById('modalActions');
+        document.getElementById('detailModal').style.display = 'flex';
         body.innerHTML = '加载中...';
         try {
-            const res = await fetch(`${CONFIG.API}/${type}/${id}?api_key=${CONFIG.KEY}&language=zh-CN`);
+            const res = await fetch(`${CONFIG.API}/${type}/${id}?api_key=${CONFIG.KEY}&language=zh-CN&append_to_response=alternative_titles`);
             const data = await res.json();
             const title = data.title || data.name;
-            const seasonInfo = type === 'tv' ? `<span style="background:rgba(0,0,0,0.05); padding:4px 12px; border-radius:8px; font-size:12px; font-weight:500;">共 ${data.number_of_seasons || 1} 季</span>` : '';
-            body.innerHTML = `
-                <h2 style="font-size:24px; margin-bottom:4px; font-weight:600;">${title}</h2>
-                <p style="font-size:13px; opacity:0.4; margin-bottom:15px; font-weight:500;">${data.original_title || data.original_name || ''}</p>
-                <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
-                    <span style="background:var(--primary); color:#fff; padding:4px 12px; border-radius:8px; font-size:12px; font-weight:600;">${(data.release_date || data.first_air_date || '').slice(0,4)} 年</span>
-                    ${seasonInfo}
-                    <span style="background:rgba(0,0,0,0.05); padding:4px 12px; border-radius:8px; font-size:12px; font-weight:500;">${data.genres?.map(g => g.name).slice(0,3).join(' / ')}</span>
-                </div>
-                <p style="font-size:16px; line-height:1.7; opacity:0.8; font-weight:400; text-align:justify;">${data.overview || '暂无介绍。'}</p>
-            `;
-            const sourceName = state.source === 'tmdb' ? 'TMDB' : '豆瓣';
-            const btnColor = state.source === 'tmdb' ? 'var(--tmdb-color)' : 'var(--douban-color)';
+            const isEnded = data.status === 'Ended' || data.status === 'Canceled';
+            const statusBadge = type === 'tv' ? (isEnded ? `<span class="status-badge status-ended">已完结</span>` : `<span class="status-badge status-ongoing">连载中</span>`) : '';
+            let akas = data.alternative_titles?.titles || data.alternative_titles?.results || [];
+            let akaNames = [...new Set(akas.map(a => a.title || a.name))].filter(n => n !== title);
+            let displayAkas = akaNames.length > 3 ? akaNames.slice(0, 3).join(' / ') + ' ……' : akaNames.join(' / ');
+            const akaHtml = akaNames.length > 0 ? `<p style="font-size:12px; opacity:0.5; margin-bottom:15px; line-height:1.4; text-align:center;">又名：${displayAkas}</p>` : '';
+            let seasonHtml = '';
+            if (type === 'tv' && data.seasons) {
+                const seasonTags = data.seasons.map(s => `<div class="season-tag">第 ${s.season_number} 季</div>`).join('');
+                seasonHtml = `<div style="margin-top:20px;"><div style="display:flex; gap:10px; flex-wrap:wrap; background:rgba(0,0,0,0.03); padding:15px; border-radius:18px; justify-content:center;">${seasonTags}</div></div>`;
+            }
+            body.innerHTML = `<div style="text-align:center; margin-bottom:15px;"><h2 style="font-size:26px; font-weight:800; margin-bottom:5px;">${title}</h2><p style="font-size:13px; opacity:0.4;">${data.original_title || data.original_name}</p></div>${akaHtml}
+                <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; justify-content:center;">${statusBadge}<span style="background:var(--primary); color:#fff; padding:4px 12px; border-radius:10px; font-size:12px; font-weight:700;">${type === 'tv' ? `共 ${data.number_of_seasons} 季` : `${data.runtime} min`}</span></div>
+                <p style="font-size:15px; line-height:1.8; opacity:0.8; text-align:center;">${data.overview || '暂无简介'}</p>${seasonHtml}`;
             const targetUrl = state.source === 'tmdb' ? `https://www.themoviedb.org/${type}/${id}` : `https://search.douban.com/movie/subject_search?search_text=${encodeURIComponent(title)}`;
-            document.getElementById('modalActions').innerHTML = `<button class="btn-official" style="background:${btnColor}" onclick="window.open('${targetUrl}', '_blank')"><i class="fas fa-external-link-alt"></i> 前往 ${sourceName} 详情</button>`;
+            actions.innerHTML = `<button onclick="window.open('${targetUrl}', '_blank')" style="width:100%; padding:18px; border-radius:16px; border:none; background:var(--primary); color:#fff; font-weight:700; cursor:pointer;">前往详情</button>`;
         } catch (e) { body.innerHTML = '详情加载失败'; }
     }
 
-    function renderHistory() { document.getElementById('historyList').innerHTML = state.history.map(h => `<div class="history-item" onclick="quickSearch('${h}')"><i class="fas fa-history" style="opacity:0.3"></i> ${h}</div>`).join(''); }
-    function quickSearch(v) { document.getElementById('searchInput').value = v; handleSearch(); if(window.innerWidth <= 1024) toggleSidebar(); }
+    function switchLayoutStyle(style) { state.layout = style; localStorage.setItem('yj_layout', style); document.getElementById('resultsGrid').className = `results-grid style-${style}`; document.getElementById('btnPortrait').classList.toggle('active', style === 'portrait'); document.getElementById('btnLandscape').classList.toggle('active', style === 'landscape'); if(state.allResults.length > 0) renderGrid(); }
+    function quickThemeToggle() { const isDark = document.documentElement.getAttribute('data-theme') === 'dark'; const next = isDark ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', next); localStorage.setItem('yj_dark', next === 'dark'); updateThemeIcon(next === 'dark'); }
+    function updateThemeIcon(isDark) { document.querySelector('.id-icon').className = isDark ? 'fas id-icon fa-moon' : 'fas id-icon fa-sun'; }
+    function applyStoredTheme() { const isDark = localStorage.getItem('yj_dark') === 'true'; document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light'); updateThemeIcon(isDark); }
+    function toggleSidebar() { const isActive = document.getElementById('sidebar').classList.toggle('active'); document.getElementById('sidebar-overlay').style.display = isActive ? 'block' : 'none'; }
+    function togglePicker(e) { e.stopPropagation(); const p = document.getElementById('pickerPanel'); p.style.display = p.style.display === 'block' ? 'none' : 'block'; }
+    function switchSource(src, el) { state.source = src; document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active')); el.classList.add('active'); if(window.innerWidth <= 1024) toggleSidebar(); }
+    function setFilter(type, el) { state.currentFilter = type; document.querySelectorAll('#mediaFilter .filter-btn:not(:last-child)').forEach(b => b.classList.remove('active')); el.classList.add('active'); renderGrid(); }
+    function setSort(type, el) { el.classList.toggle('active'); state.currentSort = el.classList.contains('active') ? type : 'default'; renderGrid(); }
+    function renderHistory() { document.getElementById('historyList').innerHTML = state.history.map(h => `<div class="menu-item" style="font-size:13px;" onclick="quickSearch('${h}')"><i class="fas fa-history" style="opacity:0.3"></i> ${h}</div>`).join(''); }
+    function quickSearch(v) { document.getElementById('searchInput').value = v; handleSearch(); }
     function clearHistory() { state.history = []; localStorage.removeItem('yj_his'); renderHistory(); }
     function closeModal() { document.getElementById('detailModal').style.display = 'none'; }
     document.getElementById('searchInput').addEventListener('keypress', e => e.key === 'Enter' && handleSearch());
