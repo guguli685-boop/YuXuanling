@@ -36,7 +36,7 @@
         /* 搜索聚焦效果 */
         body.searching .results-grid, body.searching .toolbar-wrap { filter: blur(15px); transform: scale(0.98); opacity: 0.4; pointer-events: none; }
 
-        /* 侧边栏布局 - 已移除右边框 */
+        /* 侧边栏布局 */
         .sidebar { 
             width: var(--sidebar-w); background: var(--sidebar-bg); backdrop-filter: var(--glass-blur); 
             height: 100vh; position: fixed; border-right: none; padding: 30px 20px; 
@@ -71,10 +71,10 @@
         .filter-btn, .layout-btn { width: 44px; height: 44px; border-radius: 12px; border: none; background: transparent; color: var(--text-sec); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
         .filter-btn.active, .layout-btn.active { background: var(--primary); color: #fff; box-shadow: 0 5px 15px rgba(var(--primary-rgb), 0.3); }
 
-        /* 历史记录区域 - 已移除顶部分割线 */
+        /* 历史记录区域 */
         .history-section { margin-top: 20px; border-top: none; padding-top: 20px; flex-grow: 1; overflow-y: auto; }
 
-        /* 侧边栏底部 - 已移除顶部分割线 */
+        /* 侧边栏底部 */
         .sidebar-footer { margin-top: auto; padding-top: 20px; border-top: none; }
         
         .footer-controls { display: flex; background: rgba(0,0,0,0.03); border-radius: 15px; padding: 6px; gap: 15px; align-items: center; justify-content: flex-start; margin-bottom: 15px; width: fit-content; }
@@ -83,11 +83,13 @@
         .theme-switch-dot { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #86868B; transition: 0.4s var(--ease); }
         [data-theme="dark"] .theme-switch-dot { left: 29px; transform: rotate(360deg); }
 
-        .results-grid { display: grid; gap: 28px; width: 100%; max-width: 1300px; margin-top: 20px; }
-        .results-grid.style-portrait { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
-        .results-grid.style-landscape { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); }
+        /* 卡片缩小与安全区域微调 */
+        .results-grid { display: grid; gap: 20px; width: 100%; max-width: 1200px; margin: 20px auto 0; }
+        .results-grid.style-portrait { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+        .results-grid.style-landscape { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+        
         .card { background: var(--card-bg); border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border); cursor: pointer; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.03); animation: slideUpFade 0.6s var(--ease) backwards; }
-        .card:hover { transform: translateY(-12px) scale(1.02); border-color: var(--primary); }
+        .card:hover { transform: translateY(-10px) scale(1.01); border-color: var(--primary); }
         .card-img-wrapper { background: #e0e0e0; position: relative; overflow: hidden; aspect-ratio: 2/3; }
         .style-landscape .card-img-wrapper { aspect-ratio: 16/9; }
         .card-img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: 0.8s; }
@@ -192,7 +194,7 @@
     </div>
 
 <script>
-    const CONFIG = { KEY: 'tmdb密钥填这里', API: 'https://api.themoviedb.org/3', IMG_H: 'https://image.tmdb.org/t/p/w780', IMG_V: 'https://image.tmdb.org/t/p/w500' };
+    const CONFIG = { KEY: 'tmdb密钥填在这里', API: 'https://api.themoviedb.org/3', IMG_H: 'https://image.tmdb.org/t/p/w780', IMG_V: 'https://image.tmdb.org/t/p/w500' };
     let state = { history: JSON.parse(localStorage.getItem('yj_his')) || [], source: 'tmdb', allResults: [], currentFilter: 'all', currentSort: 'default', layout: localStorage.getItem('yj_layout') || 'portrait' };
     let colorPicker;
 
@@ -236,10 +238,11 @@
             const title = item.title || item.name;
             const imgPath = item.backdrop_path || item.poster_path;
             const imgUrl = imgPath ? (state.layout === 'landscape' ? CONFIG.IMG_H : CONFIG.IMG_V) + imgPath : '';
+            // 优化了文字部分的 padding
             return `<div class="card" style="animation-delay: ${index * 0.05}s" onclick="showDetail(${item.id}, '${item.media_type}')">
                         <div style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); color: #fff; padding: 3px 8px; border-radius: 6px; font-size: 10px; z-index: 5;">${item.media_type === 'tv' ? '剧集' : '电影'}</div>
                         <div class="card-img-wrapper">${imgUrl ? `<img src="${imgUrl}" class="card-img" onload="this.classList.add('loaded')">` : `<div style="height:100%; display:flex; align-items:center; justify-content:center; opacity:0.2;">${title}</div>`}</div>
-                        <div style="padding:15px;"><div style="font-weight:700; font-size:14px; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${title}</div>
+                        <div style="padding:12px;"><div style="font-weight:700; font-size:14px; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${title}</div>
                         <div style="font-size:11px; color:var(--text-sec); display:flex; justify-content:space-between;"><span style="color:#f1c40f; font-weight:700;"><i class="fas fa-star"></i> ${item.vote_average?.toFixed(1) || '0.0'}</span><span>${(item.release_date || item.first_air_date || '').slice(0,4)}</span></div></div></div>`;
         }).join('');
     }
