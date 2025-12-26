@@ -162,24 +162,51 @@
         .pill-container { display: flex; gap: 12px; justify-content: center; margin-bottom: 25px; flex-wrap: wrap; }
         .pill { display: inline-flex; align-items: center; gap: 8px; padding: 8px 18px; border-radius: 14px; font-size: 13px; font-weight: 800; background: rgba(var(--primary-rgb), 0.12); color: var(--primary); border: 1px solid rgba(var(--primary-rgb), 0.1); cursor: pointer; transition: 0.2s; }
 
-        .alias-container { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 25px; padding: 0 10px; }
+        /* 别名标签增强样式 */
+        .alias-container { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 25px; padding: 0 10px; max-height: 90px; overflow: hidden; transition: max-height 0.5s var(--ease); }
+        .alias-container.expanded { max-height: 500px; }
         .alias-tag { 
             background: var(--nav-group-bg); 
             border: 1.5px solid var(--glass-border); 
             color: var(--text-sec); 
-            padding: 6px 14px; 
+            padding: 6px 4px 6px 14px; 
             border-radius: 12px; 
             font-size: 12px; 
             font-weight: 700; 
-            cursor: pointer; 
             transition: all 0.3s var(--ease); 
             display: inline-flex; 
             align-items: center; 
-            gap: 6px; 
+            gap: 4px; 
         }
-        .alias-tag:hover { background: rgba(var(--primary-rgb), 0.1); border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
-        .alias-tag::before { content: "\f02b"; font-family: "Font Awesome 6 Free"; font-weight: 900; font-size: 10px; opacity: 0.5; }
-        
+        .alias-tag span.alias-text { cursor: pointer; }
+        .alias-tag span.alias-text:hover { color: var(--primary); }
+        .alias-tag .alias-search-btn { 
+            padding: 4px 8px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            opacity: 0.4; 
+            transition: 0.2s;
+        }
+        .alias-tag .alias-search-btn:hover { 
+            opacity: 1; 
+            background: rgba(var(--primary-rgb), 0.15); 
+            color: var(--primary); 
+        }
+
+        .alias-toggle-btn {
+            width: 100%;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--primary);
+            cursor: pointer;
+            margin-bottom: 20px;
+            margin-top: -15px;
+            opacity: 0.7;
+            transition: 0.3s;
+        }
+        .alias-toggle-btn:hover { opacity: 1; text-decoration: underline; }
+
         /* 响应式适配修复 */
         @media (max-width: 1024px) {
             .mobile-nav { 
@@ -423,26 +450,57 @@
             let rawAliases = []; if (originalTitle && originalTitle.toLowerCase() !== currentTitle.toLowerCase()) rawAliases.push(originalTitle);
             const apiAliases = (aliasData.titles || aliasData.results || []).map(a => a.title.trim());
             rawAliases = [...rawAliases, ...apiAliases];
-            const finalAliases = [...new Set(rawAliases)].filter(t => t.toLowerCase() !== currentTitle.toLowerCase() && t.length > 1).slice(0, 6);
+            const finalAliases = [...new Set(rawAliases)].filter(t => t.toLowerCase() !== currentTitle.toLowerCase() && t.length > 1);
             
             h.innerHTML = `<h2>${currentTitle}</h2><div class=\"pill-container\"><span class=\"pill\" onclick=\"copyText(event, '{tmdb-${data.id}}')\"><i class=\"fas fa-copy\"></i> ID: ${data.id}</span><span class=\"pill\" style=\"background:var(--primary); color:#fff;\">★ ${data.vote_average.toFixed(1)}</span></div>`;
             
-            let aliasHtml = finalAliases.length > 0 
-                ? `<div class="alias-container">
-                    ${finalAliases.map(a => `<span class="alias-tag" onclick="copyText(event, '${a.replace(/'/g, "\\'")}')">${a}</span>`).join('')}
-                   </div>` 
-                : '';
+            let aliasHtml = '';
+            if (finalAliases.length > 0) {
+                aliasHtml = `<div class="alias-container" id="aliasContainer">
+                    ${finalAliases.map(a => `
+                        <div class="alias-tag">
+                            <span class="alias-text" onclick="copyText(event, '${a.replace(/'/g, "\\'")}')">${a}</span>
+                            <div class="alias-search-btn" title="以此别名搜索" onclick="quickSearchFromDetail('${a.replace(/'/g, "\\'")}')">
+                                <i class="fas fa-search"></i>
+                            </div>
+                        </div>
+                    `).join('')}
+                   </div>`;
+                
+                // 如果别名超过3个，增加展开开关
+                if (finalAliases.length > 3) {
+                    aliasHtml += `<div class="alias-toggle-btn" id="aliasToggle" onclick="toggleAliases()">更多别名 <i class="fas fa-chevron-down"></i></div>`;
+                }
+            }
                 
             b.innerHTML = `${aliasHtml}<p style=\"font-size: 17px; line-height: 2; color: var(--text-main); text-align: justify; font-weight: 500;\">${data.overview || '此档案暂无描述。'}</p>`;
             f.innerHTML = `<button class=\"btn-search\" style=\"width:100%;margin:0;height:64px;\" onclick=\"window.open('https://www.themoviedb.org/${type}/${id}', '_blank')\">查看 TMDB 完整档案</button>`;
         } catch (e) { h.innerHTML = '加载失败'; }
     }
 
+    // 详情页内快速搜索逻辑
+    function quickSearchFromDetail(title) {
+        closeModal();
+        document.getElementById('searchInput').value = title;
+        handleSearch();
+    }
+
+    // 别名展开收起切换
+    function toggleAliases() {
+        const container = document.getElementById('aliasContainer');
+        const btn = document.getElementById('aliasToggle');
+        const isExpanded = container.classList.toggle('expanded');
+        btn.innerHTML = isExpanded ? `收起别名 <i class="fas fa-chevron-up"></i>` : `更多别名 <i class="fas fa-chevron-down"></i>`;
+    }
+
     function copyText(event, text) {
         const helper = document.getElementById('copyHelper'); helper.value = text; helper.select();
-        document.execCommand('copy'); const target = event.currentTarget; const old = target.innerHTML;
-        target.innerHTML = `<i class=\"fas fa-check\"></i> 已复制`; target.style.background = "#00C853"; target.style.color = "#fff";
-        setTimeout(() => { target.innerHTML = old; target.style.background = ""; target.style.color = ""; }, 1800);
+        document.execCommand('copy'); const target = event.currentTarget; 
+        // 处理如果是别名标签内的文本复制
+        const displayTarget = target.classList.contains('alias-text') ? target : target;
+        const old = displayTarget.innerHTML;
+        displayTarget.innerHTML = `<i class=\"fas fa-check\"></i> 已复制`;
+        setTimeout(() => { displayTarget.innerHTML = old; }, 1800);
     }
 
     function quickThemeToggle() {
