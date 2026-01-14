@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>影迹 | guguli685-boop 影迹</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
+    <style>
+        :root {
+            --primary: #8E2DE2; --primary-rgb: 142, 45, 226;
+            --bg: #0A0A0C; --glass-bg: rgba(255, 255, 255, 0.04); 
+            --glass-border: rgba(255, 255, 255, 0.08); --sidebar-bg: rgba(15, 15, 20, 0.95);
+            --text-main: #FFFFFF; --text-sec: #A1A1A6; --sidebar-w: 280px; 
+            --glass-blur: blur(40px) saturate(210%); --shadow-liquid: 0 30px 60px rgba(0, 0, 0, 0.5);
+            --ease: cubic-bezier(0.16, 1, 0.3, 1);
+            --modal-bg: rgba(15, 15, 20, 0.98);
+        }
+        [data-theme="light"] {
+            --bg: #F5F7FA; --glass-bg: rgba(255, 255, 255, 0.8); --glass-border: rgba(255, 255, 255, 0.9);
+            --sidebar-bg: rgba(255, 255, 255, 0.95); --text-main: #000; --text-sec: #444446;
+            --modal-bg: rgba(255, 255, 255, 0.98);
+        }
+
+        /* 统一滚动条样式 */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(var(--primary-rgb), 0.3); border-radius: 10px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, "PingFang SC", sans-serif; transition: background 0.5s var(--ease), border-color 0.4s var(--ease), transform 0.3s var(--ease); }
+        body { background: var(--bg); color: var(--text-main); min-height: 100vh; display: flex; overflow: hidden; }
+
+        .liquid-bg { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 15% 15%, rgba(var(--primary-rgb), 0.15) 0%, transparent 45%), radial-gradient(circle at 85% 85%, rgba(var(--primary-rgb), 0.1) 0%, transparent 45%); animation: drift 25s infinite alternate ease-in-out; }
+        @keyframes drift { from { transform: scale(1); } to { transform: scale(1.1) rotate(2deg); } }
+
+        /* 侧边栏：修复溢出问题 */
+        .sidebar { width: var(--sidebar-w); background: var(--sidebar-bg); backdrop-filter: var(--glass-blur); height: 100vh; position: fixed; left: 0; top: 0; z-index: 4000; padding: 45px 25px; border-right: 1px solid var(--glass-border); display: flex; flex-direction: column; transition: transform 0.5s var(--ease); overflow: hidden; }
+        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 3900; display: none; backdrop-filter: blur(8px); }
+        .mobile-toggle { position: fixed; top: 20px; left: 20px; width: 50px; height: 50px; border-radius: 15px; background: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(10px); z-index: 3800; display: none; align-items: center; justify-content: center; color: var(--text-main); cursor: pointer; }
+
+        @media (max-width: 992px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.active { transform: translateX(0); }
+            .sidebar-overlay.active { display: block; }
+            .mobile-toggle { display: flex; }
+            .main-container { margin-left: 0 !important; padding: 80px 15px 40px !important; }
+            .modal-overlay { padding: 15px; }
+            .modal-content { flex-direction: column; max-height: 88vh; width: 95%; border-radius: 35px; overflow-y: auto; }
+            .modal-left { width: 100% !important; height: auto !important; aspect-ratio: 16/9 !important; flex-shrink: 0; position: relative; }
+            .modal-left::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: linear-gradient(to top, var(--modal-bg), transparent); z-index: 1; }
+            .modal-left img { width: 100% !important; height: 100% !important; object-fit: cover !important; }
+            .modal-right { padding: 20px 25px; text-align: center; }
+            .modal-right h2 { text-align: center; font-size: 26px !important; margin-top: -10px; z-index: 2; position: relative; }
+            .modal-footer { flex-direction: column; gap: 10px; padding: 20px 0; }
+            .modal-footer button, .modal-footer a { width: 100% !important; flex: none !important; height: 54px !important; }
+        }
+
+        /* Logo 区域优化 */
+        .logo-box { cursor: pointer; margin-bottom: 50px; flex-shrink: 0; }
+        .logo-box h1 { 
+            font-size: 28px; font-weight: 900; 
+            background: linear-gradient(135deg, var(--primary), #FF0080); 
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+            margin-bottom: 15px; 
+        }
+        .logo-desc { 
+            font-size: 13px; opacity: 0.6; font-weight: 500; 
+            line-height: 1.8; letter-spacing: 0.8px; 
+            color: var(--text-sec); text-align: justify; 
+        }
+
+        .nav-section { flex-shrink: 0; }
+        .nav-group-card { background: var(--glass-bg); border-radius: 26px; padding: 8px; border: 1px solid var(--glass-border); margin-bottom: 25px; }
+        .menu-item { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 18px; cursor: pointer; color: var(--text-sec); font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+        .menu-item.active { color: #fff; background: var(--primary); box-shadow: 0 12px 25px rgba(var(--primary-rgb), 0.35); }
+
+        .github-home-btn { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 16px; border-radius: 20px; background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-main); font-weight: 600; font-size: 14px; cursor: pointer; margin-top: auto; margin-bottom: 30px; flex-shrink: 0; }
+
+        .scroll-section { flex: 1; overflow-y: auto; margin-bottom: 20px; }
+        .section-header { font-size: 11px; font-weight: 800; color: var(--text-sec); padding: 10px; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; }
+        .list-item { padding: 12px 16px; border-radius: 14px; font-size: 13px; color: var(--text-sec); cursor: pointer; margin-bottom: 6px; background: rgba(255,255,255,0.02); }
+
+        /* 地区配置网格 */
+        .region-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 15px; }
+        .region-item { 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            padding: 12px 8px; border-radius: 20px; gap: 8px;
+            background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); 
+            cursor: pointer; transition: all 0.3s var(--ease);
+        }
+        .region-item:hover { background: rgba(255,255,255,0.08); transform: translateY(-2px); border-color: rgba(var(--primary-rgb), 0.4); }
+        .region-item.selected { background: rgba(var(--primary-rgb), 0.12); border-color: var(--primary); box-shadow: 0 8px 20px rgba(var(--primary-rgb), 0.15); }
+        .region-item span { font-size: 13px; font-weight: 600; color: var(--text-sec); transition: 0.3s; text-align: center; line-height: 1.2; }
+        .region-item.selected span { color: #fff; }
+
+        .pill-switch { position: relative; display: inline-block; width: 36px; height: 20px; pointer-events: none; }
+        .pill-switch input { opacity: 0; width: 0; height: 0; }
+        .pill-slider { position: absolute; inset: 0; background-color: rgba(255,255,255,0.1); transition: .3s; border-radius: 22px; }
+        .pill-slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+        input:checked + .pill-slider { background-color: var(--primary); }
+        input:checked + .pill-slider:before { transform: translateX(16px); }
+
+        /* 配置面板修复：核心修复代码 */
+        .tool-panel { 
+            display: none; position: absolute; bottom: 100px; left: 20px; right: 20px; 
+            background: var(--modal-bg); border-radius: 30px; padding: 25px; 
+            border: 1px solid var(--glass-border); box-shadow: var(--shadow-liquid); 
+            z-index: 4100; animation: spring 0.4s var(--ease); 
+            max-height: calc(100vh - 180px); /* 动态计算最大高度，防止撑出屏幕 */
+            overflow-y: auto; overflow-x: hidden;
+        }
+        .bottom-tools { display: flex; justify-content: space-between; padding-top: 20px; flex-shrink: 0; }
+        .tool-btn { cursor: pointer; color: var(--text-sec); font-size: 18px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); }
+        .tool-btn.active { color: #fff; background: var(--primary); }
+
+        .main-container { margin-left: var(--sidebar-w); flex: 1; padding: 60px 50px; min-width: 0; height: 100vh; overflow-y: auto; }
+        .search-area { max-width: 900px; margin: 0 auto 50px; text-align: center; }
+        .search-box { background: var(--glass-bg); border-radius: 28px; padding: 0 28px; display: flex; align-items: center; border: 1px solid var(--glass-border); box-shadow: var(--shadow-liquid); backdrop-filter: var(--glass-blur); margin-bottom: 25px; }
+        .search-box input { border: none; outline: none; width: 100%; height: 70px; font-size: 18px; background: transparent; color: var(--text-main); }
+        
+        .icon-btn-group { display: flex; align-items: center; justify-content: center; gap: 12px; }
+        .layout-icon-btn { 
+            width: 44px; height: 44px; border-radius: 12px; 
+            border: 1px solid var(--glass-border); 
+            background: rgba(255, 255, 255, 0.05); 
+            color: var(--text-main); cursor: pointer; 
+            display: flex; align-items: center; justify-content: center; 
+            transition: 0.3s var(--ease); font-size: 16px;
+        }
+        .layout-icon-btn.active { background: var(--primary); border-color: transparent; box-shadow: 0 8px 20px rgba(var(--primary-rgb), 0.3); }
+        .lucky-dice-btn { 
+            width: 44px; height: 44px; border-radius: 12px; 
+            border: 1px solid var(--glass-border); 
+            background: rgba(255, 255, 255, 0.05); 
+            color: var(--primary); cursor: pointer; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 16px; transition: 0.3s;
+        }
+        .lucky-dice-btn:hover { background: rgba(var(--primary-rgb), 0.1); transform: rotate(15deg); }
+
+        .results-grid { display: grid; gap: 35px; }
+        .style-portrait { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+        .style-landscape { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(25px); display: none; justify-content: center; align-items: center; z-index: 5000; }
+        .modal-content { background: var(--modal-bg); border-radius: 45px; width: 100%; max-width: 1050px; max-height: 85vh; overflow: hidden; display: flex; border: 1px solid var(--glass-border); }
+        .modal-left { width: 38%; background: #000; overflow: hidden; }
+        .modal-left img { width: 100%; height: 100%; object-fit: cover; }
+        .modal-right { flex: 1; padding: 50px; overflow-y: auto; display: flex; flex-direction: column; }
+
+        .alias-wrapper { background: rgba(255,255,255,0.03); border-radius: 20px; padding: 15px; margin-bottom: 20px; border: 1px solid var(--glass-border); }
+        .alias-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .alias-tag { padding: 6px 12px; background: var(--primary); color: white; border-radius: 10px; font-size: 12px; margin: 4px; cursor: pointer; }
+
+        .overview-box { margin-bottom: 25px; }
+        .overview-content { font-size: 15px; line-height: 1.6; color: var(--text-sec); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .overview-content.expanded { -webkit-line-clamp: unset; }
+
+        .modal-footer { margin-top: auto; display: flex; gap: 12px; align-items: center; padding-top: 20px; flex-shrink: 0; }
+        .btn-fav { flex: 2.2; height: 60px; background: var(--primary); color: #fff; border: none; border-radius: 20px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px; }
+        .btn-tmdb { flex: 1.8; height: 60px; background: rgba(13, 37, 63, 1); border: 1px solid #01b4e4; color: #fff; border-radius: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; text-decoration: none; font-size: 14px; }
+        .btn-back { flex: 1; height: 60px; background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border); color: var(--text-main); border-radius: 20px; cursor: pointer; font-weight: 700; font-size: 14px; }
+
+        .card { background: var(--glass-bg); border-radius: 32px; overflow: hidden; border: 1px solid var(--glass-border); cursor: pointer; position: relative; transition: transform 0.3s var(--ease); }
+        .card:hover { transform: translateY(-8px); }
+        .card-img-wrapper { width: 100%; overflow: hidden; position: relative; }
+        .style-portrait .card-img-wrapper { aspect-ratio: 2/3; }
+        .style-landscape .card-img-wrapper { aspect-ratio: 16/9; }
+        .card-img { width: 100%; height: 100%; object-fit: cover; }
+        .card-info { padding: 15px; text-align: center; }
+        .card-title { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        @keyframes spring { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div class="liquid-bg"></div>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <div class="mobile-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></div>
+    
+    <aside class="sidebar" id="sidebar">
+        <div class="logo-box" onclick="window.open('https://github.com/guguli685-boop', '_blank')">
+            <h1>影迹</h1>
+            <div class="logo-desc">Search for miracles。</div>
+        </div>
+        
+        <div class="nav-section">
+            <div class="nav-group-card">
+                <div class="menu-item active" id="menu-trending" onclick="handleMenuClick('trending')"><i class="fas fa-bolt"></i> 热门动态</div>
+                <div class="menu-item" id="menu-watchlist" onclick="handleMenuClick('watchlist')"><i class="fas fa-bookmark"></i> 个人收藏</div>
+            </div>
+        </div>
+
+        <div class="scroll-section">
+            <div class="section-header"><span>检索历史</span><i class="fas fa-eraser" style="cursor:pointer" onclick="clearHistory()"></i></div>
+            <div id="historyList"></div>
+        </div>
+
+        <div class="github-home-btn" onclick="window.open('https://github.com/guguli685-boop', '_blank')">
+            <i class="fab fa-github"></i><span>github主页</span>
+        </div>
+
+        <div class="tool-panel" id="configPanel">
+            <div style="font-size:18px; font-weight:900; margin-bottom:4px; color:var(--text-main);">地区别名配置</div>
+            <div style="font-size:11px; opacity:0.5; margin-bottom:15px; font-weight:700;">选择后在详情页展示对应地区的译名</div>
+            <div class="region-grid" id="regionGrid"></div>
+            <button onclick="saveConfig(); toggleTool('config')" style="width:100%; margin-top:25px; height:60px; background:linear-gradient(135deg, var(--primary), #FF0080); color:#fff; border:none; border-radius:24px; font-weight:900; cursor:pointer; box-shadow: 0 10px 20px rgba(var(--primary-rgb), 0.3);">保存配置</button>
+        </div>
+
+        <div class="tool-panel" id="pickerPanel"><div id="iroWheel" style="display:flex; justify-content:center;"></div><button onclick="toggleTool('picker')" style="width:100%; margin-top:20px; padding:14px; background:var(--primary); color:#fff; border:none; border-radius:18px; font-weight:800; cursor:pointer;">应用配色</button></div>
+        <div class="tool-panel" id="apiKeyPanel"><div style="font-size:12px; font-weight:800; margin-bottom:15px;">TMDB API 配置</div><input type="password" id="apiKeyInput" style="width:100%; padding:15px; border-radius:18px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.05); margin-bottom:15px; color:var(--text-main); outline:none;"><button onclick="saveKey(); toggleTool('key')" style="width:100%; padding:14px; background:var(--primary); color:#fff; border:none; border-radius:18px; font-weight:800; cursor:pointer;">应用配置</button></div>
+
+        <div class="bottom-tools">
+            <div class="tool-btn" id="configBtn" onclick="toggleTool('config')"><i class="fas fa-sliders"></i></div>
+            <div class="tool-btn" id="pickerBtn" onclick="toggleTool('picker')"><i class="fas fa-wand-magic-sparkles"></i></div>
+            <div class="tool-btn" id="keyBtn" onclick="toggleTool('key')"><i class="fas fa-shield-halved"></i></div>
+            <div class="tool-btn" id="themeBtn" onclick="toggleTheme()"><i class="fas fa-moon"></i></div>
+        </div>
+    </aside>
+
+    <main class="main-container">
+        <div class="search-area">
+            <div class="search-box">
+                <i class="fas fa-search" style="opacity:0.3; margin-right:15px; font-size: 20px;"></i>
+                <input type="text" id="searchInput" placeholder="搜索电影、美剧..." onkeypress="if(event.key==='Enter') handleSearch()">
+            </div>
+            
+            <div class="icon-btn-group">
+                <button class="layout-icon-btn active" id="btnPortrait" onclick="switchLayout('portrait')" title="竖屏布局">
+                    <i class="fas fa-th-large"></i>
+                </button>
+                <button class="layout-icon-btn" id="btnLandscape" onclick="switchLayout('landscape')" title="横屏布局">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <button class="lucky-dice-btn" onclick="luckyPick()" title="随机看一个">
+                    <i class="fas fa-dice"></i>
+                </button>
+            </div>
+        </div>
+        <div id="resultsGrid" class="results-grid style-portrait"></div>
+    </main>
+
+    <div class="modal-overlay" id="detailModal" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-left" id="modalPoster"></div>
+            <div class="modal-right" id="modalInfo"></div>
+        </div>
+    </div>
+    <input type="text" id="copyHelper" style="position: absolute; left: -9999px;">
+
+<script>
+    const API_BASE = 'https://api.themoviedb.org/3';
+    const IMG = { v: 'https://image.tmdb.org/t/p/w500', h: 'https://image.tmdb.org/t/p/w1280', s: 'https://image.tmdb.org/t/p/w185' };
+    const REGIONS = [{code:'CN',name:'中国大陆'},{code:'TW',name:'中国台湾'},{code:'HK',name:'中国香港'},{code:'US',name:'美国'},{code:'JP',name:'日本'},{code:'KR',name:'韩国'},{code:'GB',name:'英国'},{code:'FR',name:'法国'},{code:'DE',name:'德国'}];
+
+    let state = { layout:'portrait', list:[], watchlist:JSON.parse(localStorage.getItem('yj_fav'))||[], history:JSON.parse(localStorage.getItem('yj_his'))||[], config:JSON.parse(localStorage.getItem('yj_config'))||[] };
+
+    window.onload = () => { initPicker(); renderHistory(); applySavedTheme(); renderRegionGrid(); const key = localStorage.getItem('yj_key'); if(key) { document.getElementById('apiKeyInput').value = key; loadTrending(); } };
+
+    /* --- 逻辑函数 --- */
+    function renderRegionGrid() {
+        const container = document.getElementById('regionGrid');
+        container.innerHTML = REGIONS.map(r => {
+            const isSelected = state.config.includes(r.code);
+            return `
+                <div class="region-item ${isSelected ? 'selected' : ''}" id="card_${r.code}" onclick="toggleRegionCheckbox('${r.code}')">
+                    <span>${r.name}</span>
+                    <label class="pill-switch">
+                        <input type="checkbox" id="reg_${r.code}" value="${r.code}" ${isSelected ? 'checked' : ''} onchange="event.stopPropagation()">
+                        <span class="pill-slider"></span>
+                    </label>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function toggleRegionCheckbox(code) { 
+        const cb = document.getElementById('reg_' + code); 
+        const card = document.getElementById('card_' + code);
+        cb.checked = !cb.checked; 
+        if(cb.checked) card.classList.add('selected');
+        else card.classList.remove('selected');
+    }
+
+    function saveConfig() { const checks = document.querySelectorAll('#regionGrid input:checked'); state.config = Array.from(checks).map(cb => cb.value); localStorage.setItem('yj_config', JSON.stringify(state.config)); }
+    
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); document.getElementById('sidebarOverlay').classList.toggle('active'); }
+    
+    function toggleTool(type) {
+        const panels = ['pickerPanel', 'apiKeyPanel', 'configPanel'], btns = ['pickerBtn', 'keyBtn', 'configBtn'];
+        const targets = { 'picker': 0, 'key': 1, 'config': 2 };
+        const targetIdx = targets[type];
+        panels.forEach((p, i) => {
+            const el = document.getElementById(p), btn = document.getElementById(btns[i]);
+            if(i === targetIdx) {
+                const isHidden = el.style.display === 'none' || !el.style.display;
+                el.style.display = isHidden ? 'block' : 'none';
+                btn.classList.toggle('active', isHidden);
+            } else { el.style.display = 'none'; btn.classList.remove('active'); }
+        });
+    }
+
+    async function showDetail(id, type) {
+        const key = localStorage.getItem('yj_key');
+        if(!key) return;
+        const [detail, credits, aliases] = await Promise.all([
+            fetch(`${API_BASE}/${type}/${id}?api_key=${key}&language=zh-CN`).then(r => r.json()),
+            fetch(`${API_BASE}/${type}/${id}/credits?api_key=${key}&language=zh-CN`).then(r => r.json()),
+            fetch(`${API_BASE}/${type}/${id}/alternative_titles?api_key=${key}`).then(r => r.json())
+        ]);
+        const isFav = state.watchlist.some(f => f.id === id);
+        let rawAliases = [];
+        const results = aliases.titles || aliases.results || [];
+        if (state.config.length > 0) rawAliases = results.filter(a => state.config.includes(a.iso_3166_1)).map(a => a.title);
+        else rawAliases = results.map(a => a.title);
+        rawAliases = [...new Set(rawAliases)];
+        const tmdbUrl = `https://www.themoviedb.org/${type}/${id}`;
+        const isMobile = window.innerWidth <= 992;
+        const displayImgPath = isMobile ? (detail.backdrop_path || detail.poster_path) : (detail.poster_path || detail.backdrop_path);
+        const displayImgUrl = displayImgPath ? IMG.h + displayImgPath : 'https://via.placeholder.com/1280x720?text=No+Image';
+        document.getElementById('modalPoster').innerHTML = `<img src="${displayImgUrl}">`;
+        document.getElementById('modalInfo').innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px; flex-wrap:wrap; position:relative; z-index:5;">
+                <h2 style="font-size:30px; font-weight:900; width:100%;">${detail.title || detail.name}</h2>
+                <div style="font-size:10px; opacity:0.5; padding-top:5px; width:100%;">ID ${detail.id}</div>
+            </div>
+            <div class="alias-wrapper">
+                <div class="alias-header" onclick="toggleAliasList()">
+                    <h4 style="font-size:13px;">别名清单 (${rawAliases.length})</h4>
+                    <i class="fas fa-chevron-down" id="aliasIcon"></i>
+                </div>
+                <div class="alias-list" id="aliasList" style="display:none; flex-wrap:wrap; margin-top:10px;">
+                    ${rawAliases.length ? rawAliases.map(a => `<div class="alias-tag" onclick="copyText(event, '${a}')">${a}</div>`).join('') : '<div style="font-size:12px; opacity:0.5;">暂无别名</div>'}
+                </div>
+            </div>
+            <div class="overview-box">
+                <div class="overview-content" id="overviewText">${detail.overview || '暂无简介。'}</div>
+                <span style="color:var(--primary);cursor:pointer;font-weight:800;font-size:12px;" id="expandBtn" onclick="toggleOverview()">阅读全文</span>
+            </div>
+            <div class="cast-list" style="display:flex; gap:12px; overflow-x:auto; padding-bottom:20px;">
+                ${credits.cast ? credits.cast.slice(0,6).map(c => `
+                    <div style="flex:0 0 60px; text-align:center;">
+                        <img style="width:55px; height:55px; border-radius:50%; object-fit:cover;" src="${c.profile_path ? IMG.s + c.profile_path : 'https://via.placeholder.com/100'}">
+                        <div style="font-size:9px; margin-top:5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${c.name}</div>
+                    </div>
+                `).join('') : ''}
+            </div>
+            <div class="modal-footer">
+                <button class="btn-fav" onclick='toggleFav(${JSON.stringify(detail).replace(/'/g, "\\'")}, "${type}")'>
+                    <i class="fas fa-heart"></i> <span>${isFav ? '移出收藏' : '标记想看'}</span>
+                </button>
+                <a href="${tmdbUrl}" target="_blank" class="btn-tmdb">
+                    <i class="fas fa-globe"></i> TMDB官网
+                </a>
+                <button class="btn-back" onclick="closeModal()">返回</button>
+            </div>
+        `;
+        document.getElementById('detailModal').style.display = 'flex';
+    }
+
+    async function handleSearch() { const q = document.getElementById('searchInput').value.trim(); const key = localStorage.getItem('yj_key'); if(!q || !key) return; state.history = [q, ...state.history.filter(h => h !== q)].slice(0, 10); localStorage.setItem('yj_his', JSON.stringify(state.history)); renderHistory(); const res = await fetch(`${API_BASE}/search/multi?api_key=${key}&query=${encodeURIComponent(q)}&language=zh-CN`); const data = await res.json(); renderGrid(data.results.filter(i => i.media_type !== 'person')); }
+    function renderGrid(items) { state.list = items; document.getElementById('resultsGrid').innerHTML = items.map(item => { const isFav = state.watchlist.some(f => f.id === item.id); const imgPath = state.layout === 'landscape' ? (item.backdrop_path || item.poster_path) : item.poster_path; const imgUrl = imgPath ? (state.layout === 'landscape' ? IMG.h : IMG.v) + imgPath : 'https://via.placeholder.com/500?text=No+Poster'; return `<div class="card" onclick="showDetail(${item.id}, '${item.media_type || 'movie'}')"><div class="card-img-wrapper"><img class="card-img" src="${imgUrl}"></div><div class="card-info"><div class="card-title">${item.title || item.name}</div></div>${isFav ? '<div style="position:absolute; top:15px; right:15px; color:var(--primary);"><i class="fas fa-heart"></i></div>' : ''}</div>`; }).join(''); }
+    function handleMenuClick(type) { document.getElementById('menu-trending').classList.toggle('active', type === 'trending'); document.getElementById('menu-watchlist').classList.toggle('active', type === 'watchlist'); if(type === 'trending') loadTrending(); else renderGrid(state.watchlist); if(window.innerWidth <= 992) toggleSidebar(); }
+    function loadTrending() { const key = localStorage.getItem('yj_key'); if(key) fetch(`${API_BASE}/trending/all/day?api_key=${key}&language=zh-CN`).then(r=>r.json()).then(d=>renderGrid(d.results)); }
+    function renderHistory() { document.getElementById('historyList').innerHTML = state.history.map(h => `<div class="list-item" onclick="document.getElementById('searchInput').value='${h}';handleSearch();">${h}</div>`).join(''); }
+    function clearHistory() { state.history = []; localStorage.setItem('yj_his', '[]'); renderHistory(); }
+    function closeModal() { document.getElementById('detailModal').style.display = 'none'; }
+    function toggleTheme() { const n = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', n); localStorage.setItem('yj_theme', n); }
+    function applySavedTheme() { const t = localStorage.getItem('yj_theme') || 'dark'; document.documentElement.setAttribute('data-theme', t); }
+    function initPicker() { const s = localStorage.getItem('yj_color') || '#8E2DE2'; updateColor(s); const cp = new iro.ColorPicker("#iroWheel", { width: 180, color: s }); cp.on('color:change', c => updateColor(c.hexString)); }
+    function updateColor(h) { document.documentElement.style.setProperty('--primary', h); localStorage.setItem('yj_color', h); const r = parseInt(h.slice(1,3), 16), g = parseInt(h.slice(3,5), 16), b = parseInt(h.slice(5,7), 16); document.documentElement.style.setProperty('--primary-rgb', `${r},${g},${b}`); }
+    function copyText(e, t) { const h = document.getElementById('copyHelper'); h.value = t; h.select(); document.execCommand('copy'); const old = e.currentTarget.innerText; e.currentTarget.innerText = '已复制'; setTimeout(() => e.currentTarget.innerText = old, 1000); }
+    function toggleAliasList() { const list = document.getElementById('aliasList'), icon = document.getElementById('aliasIcon'); const isShow = list.style.display === 'flex'; list.style.display = isShow ? 'none' : 'flex'; icon.style.transform = isShow ? 'rotate(0)' : 'rotate(180deg)'; }
+    function toggleOverview() { const ov = document.getElementById('overviewText'), btn = document.getElementById('expandBtn'); const isExp = ov.classList.toggle('expanded'); btn.innerText = isExp ? '收起简介' : '阅读全文'; }
+    function toggleFav(item, type) { const idx = state.watchlist.findIndex(f => f.id === item.id); if(idx > -1) state.watchlist.splice(idx, 1); else state.watchlist.unshift({...item, media_type: type}); localStorage.setItem('yj_fav', JSON.stringify(state.watchlist)); renderGrid(state.list); closeModal(); }
+    function switchLayout(s) { state.layout = s; document.getElementById('btnPortrait').classList.toggle('active', s === 'portrait'); document.getElementById('btnLandscape').classList.toggle('active', s === 'landscape'); document.getElementById('resultsGrid').className = `results-grid style-${s}`; renderGrid(state.list); }
+    function saveKey() { const v = document.getElementById('apiKeyInput').value.trim(); if(v) { localStorage.setItem('yj_key', v); loadTrending(); } }
+    async function luckyPick() { const key = localStorage.getItem('yj_key'); if(!key) return; const res = await fetch(`${API_BASE}/movie/top_rated?api_key=${key}&language=zh-CN&page=${Math.floor(Math.random()*5)+1}`).then(r=>r.json()); showDetail(res.results[0].id, 'movie'); }
+</script>
+</body>
+</html>
