@@ -67,6 +67,6 @@ FontAwesome：高清矢量图标库。
 👨‍💻 开发者信息
 本项目由 guguli685-boop 开发并维护。
 
-GitHub 主页：
+GitHub 主页：https://github.com/guguli685-boop
 
 版权声明：本项目数据由 TMDB 提供，API 密钥由用户自行配置，仅供学习与个人观影参考。
